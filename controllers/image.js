@@ -7,12 +7,19 @@ exports.getAvtDefault = async () => {
 }
 
 exports.upload = async (path) => {
+    var dateObj = new Date();
+    var month = dateObj.getUTCMonth() + 1; //months from 1-12
+    var day = dateObj.getUTCDate();
+    var year = dateObj.getUTCFullYear();
+    newdate = day + "/" + month + "/" + year;
+
     try {
         const result = await cloudinary.uploader.upload(path);
         const image = new Image({
             _id: new mongoose.Types.ObjectId(),
             imageId: result.public_id,
-            imageUrl: result.secure_url
+            imageUrl: result.secure_url,
+            uploadTime: newdate
         })
         await image.save()
         return image

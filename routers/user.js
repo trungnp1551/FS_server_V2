@@ -15,4 +15,12 @@ router
     .route('/login')
     .post(userController.logIn)
 
+router
+    .route('/changesetting')
+    .patch(auth, userController.changeSetting)
+
+router
+    .route('/changestatus')
+    .patch(auth, userController.changeStatus)
+
 module.exports = router

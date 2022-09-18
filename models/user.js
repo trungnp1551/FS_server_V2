@@ -19,6 +19,15 @@ const userSchema = mongoose.Schema({
         type: String,
         enum:['user','admin']
     },
+    emotion: {
+        type: String,
+        default: '...'
+    },
+    description: {
+        type: String,
+        default: '...'
+    },
+    gmail: String,
     id_fake: String,
     listFriendId: [],
     token: String,
@@ -34,10 +43,6 @@ const userSchema = mongoose.Schema({
     sex: {
         type: String,
         default: 'male'
-    },
-    recentState: {
-        type: String,
-        default: false,
     },
     settingId: {
         type: mongoose.Schema.Types.ObjectId,

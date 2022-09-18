@@ -8,7 +8,7 @@ exports.createDefaultSetting = async () => {
             sound: true,
             vibration: true,
             notification: true,
-            status: true,
+            status: 'offline',
         })
         await setting.save();
         return setting;
@@ -26,7 +26,43 @@ exports.getSetting = async (id) => {
     }
 }
 
-exports.deleteAll = async ()=>{
+exports.deleteAll = async () => {
     await Setting.find().remove()
     console.log('delete setting')
+}
+
+exports.setSetting = async (id, position) => {
+    try {
+        const setting = await Setting.findById(id)
+        switch (position) {
+            case '1':
+                setting.sound = !setting.sound;
+                break;
+            case '2':
+                setting.vibration = !setting.vibration
+                break;
+            case '3':
+                setting.notification = !setting.notification
+                break;
+            default:
+                break;
+        }
+        setting.save()
+        return setting;
+    } catch (error) {
+        console.log('set setting err ' + error)
+    }
+}
+
+exports.setStatus = async (id, status) => {
+    try {
+        const setting = await Setting.findById(id)
+        if (status == 'offline' || status == 'free' || status == 'busy') {
+            setting.status = status
+            await setting.save()
+            return setting
+        }
+    } catch (error) {
+        console.log('set status err ' + error)
+    }
 }

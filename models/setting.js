@@ -5,7 +5,10 @@ const settingSchema = mongoose.Schema({
     sound: Boolean,
     vibration: Boolean,
     notification: Boolean,
-    status: Boolean,
+    status: {
+        type: String,
+        enum:['free','busy','offline']
+    },
 }, {
     versionKey: false
 })

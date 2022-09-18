@@ -4,9 +4,10 @@ const imageSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     imageId: String,
     imageUrl: String,
+    uploadTime: String,
     type: {
         type: String,
-        enum:['message','avatar','wallpaper']
+        enum:['message','avatar']
     }
 }, {
     versionKey: false
