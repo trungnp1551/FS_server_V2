@@ -9,7 +9,7 @@ const settingControler = require('../controllers/setting')
 const imageController = require('../controllers/image')
 
 exports.getAll = async (req, res) => {
-    const data = await User.find()
+    const data = await User.find().populate('listImage').populate('settingId')
 
     res.status(200).json({
         message: 'get all',
@@ -21,7 +21,7 @@ exports.getOne = async (req, res) => {
     const id = req.userId;
     console.log(id)
     try {
-        const user = await User.findById(id).populate('imageId').populate('settingId')
+        const user = await User.findById(id).populate('listImage').populate('settingId')
         return res.status(200).json({
             success: true,
             message: 'get User',
@@ -39,6 +39,44 @@ exports.deleteAll = async () => {
         console.log('delete user')
     } catch (error) {
         console.log('err')
+    }
+}
+
+exports.checkExists = async (req, res) => {
+    const { phoneNumber } = req.body
+    const user = await User.findOne({ phoneNumber: phoneNumber })
+
+    if (!user) {
+        return res.status(201).json({
+            success: false,
+            message: 'check user exists'
+        })
+    } else {
+        return res.status(200).json({
+            success: true,
+            message: 'check user exists'
+        })
+    }
+}
+
+exports.sendMailForgotPassword = async (req, res) => {
+    const { phoneNumber } = req.body
+    const user = await User.findOne({ phoneNumber: phoneNumber })
+
+    const randomCode = Math.floor(Math.random() * (999999 - 100000)) + 100000;
+
+    console.log(user.gmai)
+    if (await sendMail(user.gmail, 'FORGOT PASSWORD', 'Code: ' + randomCode)) {
+        return res.status(200).json({
+            success: true,
+            code: randomCode,
+            message: 'send mail forgot password'
+        })
+    } else {
+        return res.status(201).json({
+            success: false,
+            message: 'send mail forgot password'
+        })
     }
 }
 
@@ -74,7 +112,7 @@ exports.regiter = async (req, res) => {
         id_fake: fake_id,
         role: 'user',
         settingId: settingDefault._id.toString(),
-        imageId: avtDefault._id.toString()
+        listImage: avtDefault._id.toString()
     })
     await newUser.save()
     return res.status(200).json({
@@ -93,7 +131,7 @@ exports.logIn = async (req, res) => {
             message: 'Missing phoneNumber and/or password'
         })
 
-    const user = await User.findOne({ phoneNumber: phoneNumber }).populate('imageId')
+    const user = await User.findOne({ phoneNumber: phoneNumber }).populate('listImage')
 
     if (!user) {
         console.log('type: Not exists user')
@@ -180,31 +218,44 @@ exports.changePassword = async (req, res) => {
     })
 }
 
+exports.resetPassword = async (req, res) => {
+    const { phoneNumber, newPassword } = req.body
+
+    const user = await User.findOne({ phoneNumber: phoneNumber })
+
+    const hashedNewPassword = await argon2.hash(newPassword)
+    user.password = hashedNewPassword
+    await user.save()
+
+    return res.status(200).json({
+        success: true,
+        message: 'Reset password'
+    })
+}
+
 exports.upAvatar = async (req, res) => {
     const id = req.userId;
     try {
-        const user = await User.findById(id)
-        if (user.avatarId != undefined && user.avatarId != '001') {
-            await ImageController.destroyImage(user.avatarId)
-            //await cloudinary.uploader.destroy(user.avatarId)
+        const user = await User.findById(id).populate('listImage')
+        if (user.listImage[0] != undefined && user.listImage[0].imageId != '001') {
+            await imageController.destroyImage(user.listImage[0])
         }
         if (req.file == undefined) {
-            user.avatarId = '001'
+            user.listImage[0] = await imageController.getAvtDefault()
             await user.save()
-            res.status(200).json({
-                message: "Up avatar successful",
-                avatarId: user.avatarId,
-                avatarUrl: await ImageController.getUrl(user.avatarId)
+            return res.status(200).json({
+                success: false,
+                message: "Up avatar default",
+                avatar: user.listImage[0]
             })
-            return;
         }
-        const image = await ImageController.upload(req.file.path)
-        user.avatarId = image._id
+        const image = await imageController.upload(req.file.path, 'avatar')
+        user.listImage[0] = image
         await user.save()
         res.status(200).json({
+            success: true,
             message: "Up avatar successful",
-            avatar: user.avatarId,
-            avatarUrl: image.imageUrl
+            avatar: user.listImage[0]
         })
 
     } catch (error) {
@@ -215,9 +266,10 @@ exports.upAvatar = async (req, res) => {
 exports.changeStatus = async (req, res) => {
     const id = req.userId
     const { status } = req.body
-    const user = await User.findById(id)
+
 
     try {
+        const user = await User.findById(id)
         var checkStatus
         if (status == 'offline') {
             checkStatus = 'offline'
@@ -249,8 +301,9 @@ exports.changeStatus = async (req, res) => {
 exports.changeSetting = async (req, res) => {
     const id = req.userId
     const { position } = req.body
-    const user = await User.findById(id)
+
     try {
+        const user = await User.findById(id)
         const newSetting = await settingControler.setSetting(user.settingId, position)
 
         return res.status(200).json({
@@ -268,6 +321,60 @@ exports.changeSetting = async (req, res) => {
 
 }
 
+exports.addFriend = async (req, res) => {
+    const userId = req.userId
+    const { friendId } = req.body
+
+    try {
+        const user = await User.findById(userId)
+        const friend = await User.findById(friendId)
+
+        if (user.listFriendId.includes(friendId)) {
+            return res.status(201).json({
+                success: false,
+                message: 'Add friend'
+            });
+        }
+
+        if (user.listPendingFriend.includes(friendId)) {  //check friendId is in user' listPendingFriend
+            //addfriend
+            user.listPendingFriend.remove(friendId)
+            user.listFriendId.push(friendId)
+
+            friend.listFriendId.push(userId)
+
+            await user.save()
+            await friend.save()
+            return res.status(200).json({
+                success: true,
+                message: 'Add friend'
+            });
+        } else {
+            //send a friend request
+            if (!friend.listPendingFriend.includes(userId)) {
+                friend.listPendingFriend.push(userId)
+                await friend.save()
+                return res.status(200).json({
+                    success: true,
+                    message: 'Send a friend request'
+                });
+            }else{
+                return res.status(201).json({
+                    success: false,
+                    message: 'Send a friend request'
+                });
+            }
+
+        }
+    } catch (error) {
+        console.log(error)
+        return res.status(201).json({
+            success: false,
+            message: 'add friend err'
+        });
+    }
+}
+
 async function sendMail(toMail, subject, content) {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -280,7 +387,7 @@ async function sendMail(toMail, subject, content) {
     var mailOptions = {
         from: 'familiarstrangerv2@gmail.com',
         to: toMail,
-        subject: subject + 'FORGOT PASSWORD',
+        subject: subject,
         text: content
     };
 
@@ -289,12 +396,15 @@ async function sendMail(toMail, subject, content) {
 
         if (!result) {
             console.log('err send mail')
+            return false
         }
         else {
             console.log('send mail')
+            return true
         }
     } catch (error) {
         console.log(error + '123')
+        return false
     }
 }
 
@@ -302,6 +412,17 @@ async function checkInChatRoom() {
     return false;
 
 }
+
+Array.prototype.remove = function () {
+    var what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
+};
 //  checkInChatRoom = async () => {
 //     return false;
 

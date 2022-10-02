@@ -1,12 +1,12 @@
 const mongoose = require('mongoose')
 const Image = require('../models/image')
-const cloudinary = require('../routers/cloudinary')
+const cloudinary = require('../middleware/cloudinary')
 
 exports.getAvtDefault = async () => {
     return await Image.findOne({ imageId: '001' })
 }
 
-exports.upload = async (path) => {
+exports.upload = async (path, type) => {
     var dateObj = new Date();
     var month = dateObj.getUTCMonth() + 1; //months from 1-12
     var day = dateObj.getUTCDate();
@@ -19,7 +19,8 @@ exports.upload = async (path) => {
             _id: new mongoose.Types.ObjectId(),
             imageId: result.public_id,
             imageUrl: result.secure_url,
-            uploadTime: newdate
+            uploadTime: newdate,
+            type: type
         })
         await image.save()
         return image
@@ -28,9 +29,10 @@ exports.upload = async (path) => {
     }
 }
 
-exports.destroyImage = async (id) => {
+exports.destroyImage = async (image) => {
     try {
-        await cloudinary.uploader.destroy(id)
+        await Image.findOne({ _id: image._id }).remove()
+        await cloudinary.uploader.destroy(image.imageId)
         return true;
     } catch (error) {
         console.log(error);
@@ -38,11 +40,11 @@ exports.destroyImage = async (id) => {
     }
 }
 
-// exports.getUrl = async (id)=>{
-//     try {
-//         const image = await Image.findById(id)
-//         return image.imageUrl
-//     } catch (error) {
-//         console.log(error)
-//     }
-// }
+exports.getUrl = async (id)=>{
+    try {
+        const image = await Image.findById(id)
+        return image.imageUrl
+    } catch (error) {
+        console.log(error)
+    }
+}

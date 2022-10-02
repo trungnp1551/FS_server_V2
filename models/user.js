@@ -30,9 +30,10 @@ const userSchema = mongoose.Schema({
     gmail: String,
     id_fake: String,
     listFriendId: [],
+    listPendingFriend: [],
     token: String,
     resetTokenExpires: Date,
-    imageId: [{
+    listImage: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Image',
     }],

@@ -3,6 +3,11 @@ const router = express.Router()
 
 const userController = require('../controllers/user')
 const auth = require('../middleware/auth')
+const upload = require('../middleware/upload');
+
+router
+    .route('/getAll')
+    .get(userController.getAll)
 
 router
     .route('/')
@@ -12,8 +17,24 @@ router
     .patch(auth, userController.updateProfile)
 
 router
+    .route('/upAvatar')
+    .post(auth, upload.single("avatar"), userController.upAvatar)
+
+router
+    .route('/forgot/checkExists')
+    .post(userController.checkExists)
+
+router
+    .route('/forgot/sendMail')
+    .post(userController.sendMailForgotPassword)
+
+router
     .route('/login')
     .post(userController.logIn)
+
+router
+    .route('/resetPassword')
+    .post(userController.resetPassword)
 
 router
     .route('/changesetting')
@@ -22,5 +43,9 @@ router
 router
     .route('/changestatus')
     .patch(auth, userController.changeStatus)
+
+router
+    .route('/friend')
+    .post(auth, userController.addFriend)
 
 module.exports = router

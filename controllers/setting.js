@@ -39,10 +39,10 @@ exports.setSetting = async (id, position) => {
                 setting.sound = !setting.sound;
                 break;
             case '2':
-                setting.vibration = !setting.vibration
+                setting.notification = !setting.notification
                 break;
             case '3':
-                setting.notification = !setting.notification
+                setting.vibration = !setting.vibration
                 break;
             default:
                 break;

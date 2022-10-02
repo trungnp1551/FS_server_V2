@@ -7,7 +7,7 @@ const imageSchema = mongoose.Schema({
     uploadTime: String,
     type: {
         type: String,
-        enum:['message','avatar']
+        enum:['message','avatar','post']
     }
 }, {
     versionKey: false
