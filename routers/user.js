@@ -46,6 +46,7 @@ router
 
 router
     .route('/friend')
+    .get(auth, userController.getListFriend)
     .post(auth, userController.addFriend)
 
 module.exports = router

@@ -6,7 +6,8 @@ var nodemailer = require('nodemailer');
 const User = require('../models/user')
 
 const settingControler = require('../controllers/setting')
-const imageController = require('../controllers/image')
+const imageController = require('../controllers/image');
+const e = require('express');
 
 exports.getAll = async (req, res) => {
     const data = await User.find().populate('listImage').populate('settingId')
@@ -19,9 +20,9 @@ exports.getAll = async (req, res) => {
 
 exports.getOne = async (req, res) => {
     const id = req.userId;
-    console.log(id)
     try {
         const user = await User.findById(id).populate('listImage').populate('settingId')
+        console.log(user.token)
         return res.status(200).json({
             success: true,
             message: 'get User',
@@ -29,6 +30,41 @@ exports.getOne = async (req, res) => {
         })
     } catch (error) {
         console.log('err get user')
+    }
+}
+
+exports.getListFriend = async (req,res)=>{
+    const id = req.userId
+    try {
+        const user = await User.findById(id)
+        let listFriendData = [];
+        for (var index = 0; index < user.listFriendId.length; index++) {
+            const friend = await User.findById(user.listFriendId[index]).populate('listImage')
+            if(friend){
+                listFriendData.push({
+                    _id: friend._id.toString(),
+                    username: friend.username,
+                    emotion: friend.emotion,
+                    description: friend.description,
+                    id_fake: friend.id_fake,
+                    yearOfB: friend.yearOfB,
+                    sex: friend.sex,
+                    listImage: friend.listImage,
+                }) 
+            }
+            
+        }
+        return res.status(200).json({
+            success: true,
+            message: 'Get list friend',
+            listFriendData
+        })
+    } catch (error) {
+        console.log('get list friend ' + error)
+        return res.status(201).json({
+            success: false,
+            message: 'Get list friend'
+        })
     }
 }
 
@@ -151,6 +187,7 @@ exports.logIn = async (req, res) => {
     const token = jwt.sign({ userId: user._id }, process.env.JWT_KEY, { expiresIn: '1d' })
 
     user.token = token
+    await user.save()
     await settingControler.setStatus(user.settingId, 'free')
     await user.populate('settingId')
 
