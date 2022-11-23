@@ -9,7 +9,11 @@ const imageSchema = mongoose.Schema({
         type: String,
         enum:['message','avatar','post']
     }
-}, {
+},
+// {
+//     timestamps: true
+// },
+ {
     versionKey: false
 })
 

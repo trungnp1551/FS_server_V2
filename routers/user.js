@@ -11,10 +11,14 @@ router
 
 router
     .route('/')
-    .get(auth, userController.getOne)
+    .get(auth, userController.getUserByToken)
     .post(userController.regiter)
     .delete(userController.deleteAll)
     .patch(auth, userController.updateProfile)
+
+router
+    .route('/getUser/:userId')
+    .get(userController.getUserById)
 
 router
     .route('/upAvatar')

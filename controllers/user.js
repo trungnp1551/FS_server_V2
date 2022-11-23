@@ -18,7 +18,7 @@ exports.getAll = async (req, res) => {
     })
 }
 
-exports.getOne = async (req, res) => {
+exports.getUserByToken = async (req, res) => {
     const id = req.userId;
     try {
         const user = await User.findById(id).populate('listImage').populate('settingId')
@@ -29,9 +29,34 @@ exports.getOne = async (req, res) => {
             user
         })
     } catch (error) {
-        console.log('err get user')
+        console.log('err get user by token')
     }
 }
+
+exports.getUserById = async (req, res) => {
+    const id = req.params.userId;
+    try {
+        const temp = await User.findById(id).populate('listImage')
+        const user = {
+            _id: temp._id.toString(),
+            username: temp.username,
+            emotion: temp.emotion,
+            description: temp.description,
+            id_fake: temp.id_fake,
+            yearOfB: temp.yearOfB,
+            sex: temp.sex,
+            listImage: temp.listImage,
+        }
+        return res.status(200).json({
+            success: true,
+            message: 'get user by id',
+            user
+        })
+    } catch (error) {
+        console.log('err get user by id')
+    }
+}
+
 
 exports.getListFriend = async (req,res)=>{
     const id = req.userId

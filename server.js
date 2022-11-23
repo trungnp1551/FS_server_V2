@@ -5,7 +5,8 @@ var io = require('socket.io')(server);
 
 const SocketServer = require('./socketServer')
 io.on('connection', socket => {
-    SocketServer(socket)
+    console.log(socket.id + ' connected')
+    SocketServer(socket, io)
 })
 
 const PORT = 3000 
