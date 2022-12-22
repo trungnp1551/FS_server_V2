@@ -105,12 +105,44 @@ const SocketServer = (socket, io) => {
     })
 
     socket.on('message', async (data) => {
+        console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        io.to(`${target.socketId}`).to(`${socket.id}`).emit('message', ({ ...data, senderId: sender.userId }))
+        io.to(`${target.socketId}`).to(`${socket.id}`).emit('message', (data))
     })
 
-////////////-- disconnect --//////////////
+    socket.on('sendInvite', async (data) => {
+        console.log(data.targetId)
+        const target = await clients.find(client => client.userId == data.targetId)
+        io.to(`${target.socketId}`).emit('sendInvite', (data))
+    })
+
+    socket.on('acceptInvite', async (targetId) => {
+        const user = await clients.find(client => client.socketId == socket.id)
+        const target = await clients.find(client => client.userId == targetId)
+
+        if(target.status == status.online){
+            io.to(`${user.socketId}`).emit('to-conversation', target.userId)
+            io.to(`${target.socketId}`).emit('to-conversation', user.userId)
+    
+            user.status = status.busy
+            target.status = status.busy
+            user.targetCallId = target.userId
+            target.targetCallId = user.userId
+            console.log(user);
+            console.log(target);
+        }
+    })
+
+    socket.on('voiceCall', async (data) => {
+        console.log(data)
+        const sender = await clients.find(client => client.socketId == socket.id)
+        const target = await clients.find(client => client.userId == sender.targetCallId)
+        io.to(`${target.socketId}`).emit('voiceCall', (data))
+    })
+
+
+    ////////////-- disconnect --//////////////
 
     socket.on('disconnect-conversation', async () => {
         //const {targetId} = data
@@ -128,7 +160,7 @@ const SocketServer = (socket, io) => {
         if (!client) {
             return;
         }
-        if(client.status == status.onConnect){
+        if (client.status == status.onConnect) {
             userOnConnects.splice(userOnConnects.indexOf(client), 1)
         }
         clients.splice(clients.indexOf(client), 1);
@@ -160,6 +192,7 @@ const SocketServer = (socket, io) => {
         console.log(clients)
         console.log('disconnect')
     })
+
 }
 
 module.exports = SocketServer

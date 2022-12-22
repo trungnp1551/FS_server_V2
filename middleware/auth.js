@@ -11,7 +11,7 @@ module.exports = async (req, res, next) => {
         next()
     }
     catch (error) {
-        console.log(error)
+        //console.log(error)
         return res.status(401).json({
             success: false,
             message: "Auth failed due to token missing"

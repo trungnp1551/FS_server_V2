@@ -31,6 +31,7 @@ const userSchema = mongoose.Schema({
     id_fake: String,
     listFriendId: [],
     listPendingFriend: [],
+    listRecentConnect: [],
     token: String,
     resetTokenExpires: Date,
     listImage: [{

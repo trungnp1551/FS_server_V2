@@ -8,6 +8,8 @@ const bodyParser = require('body-parser')
 
 
 const userRouter = require('./routers/user')
+const musicRouter = require('./routers/music')
+const notificationRouter = require('./routers/notification')
 
 mongoose
     .connect(process.env.DB_CONNECTION, {
@@ -26,6 +28,8 @@ mongoose
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(bodyParser.json())
 
-    app.use('/user',userRouter)
+    app.use('/user', userRouter)
+    app.use('/music', musicRouter)
+    app.use('/notification', notificationRouter)
 
 module.exports = app 

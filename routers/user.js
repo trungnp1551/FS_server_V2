@@ -25,6 +25,10 @@ router
     .post(auth, upload.single("avatar"), userController.upAvatar)
 
 router
+    .route('/addImage')
+    .post(auth, upload.single("image"), userController.addImage)
+
+router
     .route('/forgot/checkExists')
     .post(userController.checkExists)
 
@@ -52,5 +56,9 @@ router
     .route('/friend')
     .get(auth, userController.getListFriend)
     .post(auth, userController.addFriend)
+
+router
+    .route('/addrecentconnect')
+    .post(auth, userController.addRecentConnect)
 
 module.exports = router
