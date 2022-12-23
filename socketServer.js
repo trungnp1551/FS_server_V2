@@ -108,20 +108,26 @@ const SocketServer = (socket, io) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        io.to(`${target.socketId}`).to(`${socket.id}`).emit('message', (data))
+        if(target && sender){
+            io.to(`${target.socketId}`).to(`${socket.id}`).emit('message', (data))
+        }
+        
     })
 
-    socket.on('sendInvite', async (data) => {
+    socket.on('sendNotification', async (data) => {
         console.log(data.targetId)
         const target = await clients.find(client => client.userId == data.targetId)
-        io.to(`${target.socketId}`).emit('sendInvite', (data))
+        if(target){
+            io.to(`${target.socketId}`).emit('sendNotification', (data))
+        }
     })
 
     socket.on('acceptInvite', async (targetId) => {
         const user = await clients.find(client => client.socketId == socket.id)
         const target = await clients.find(client => client.userId == targetId)
 
-        if(target.status == status.online){
+        if(target){
+            if(target.status == status.online){
             io.to(`${user.socketId}`).emit('to-conversation', target.userId)
             io.to(`${target.socketId}`).emit('to-conversation', user.userId)
     
@@ -132,15 +138,55 @@ const SocketServer = (socket, io) => {
             console.log(user);
             console.log(target);
         }
+        }
+
+        
     })
 
     socket.on('voiceCall', async (data) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        io.to(`${target.socketId}`).emit('voiceCall', (data))
+        if(target){
+            io.to(`${target.socketId}`).emit('voiceCall', (data))
+        }
     })
 
+    socket.on('play',async(data) => {
+        console.log(data)
+        const sender = await clients.find(client => client.socketId == socket.id)
+        const target = await clients.find(client => client.userId == sender.targetCallId)
+        if(target && sender){
+            io.to(`${target.socketId}`).emit('play', (data))
+        }
+    })
+
+    socket.on('pause',async() => {
+        //console.log(data)
+        const sender = await clients.find(client => client.socketId == socket.id)
+        const target = await clients.find(client => client.userId == sender.targetCallId)
+        if(target && sender){
+            io.to(`${target.socketId}`).emit('pause')
+        }
+    })
+
+    socket.on('chooseSong',async(data) => {
+        console.log(data)
+        const sender = await clients.find(client => client.socketId == socket.id)
+        const target = await clients.find(client => client.userId == sender.targetCallId)
+        if(target && sender){
+            io.to(`${target.socketId}`).emit('chooseSong', (data))
+        }
+    })
+
+    socket.on('select',async(data) => {
+        console.log(data)
+        const sender = await clients.find(client => client.socketId == socket.id)
+        const target = await clients.find(client => client.userId == sender.targetCallId)
+        if(target && sender){
+            io.to(`${target.socketId}`).emit('select', (data))
+        }
+    })
 
     ////////////-- disconnect --//////////////
 

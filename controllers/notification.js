@@ -6,7 +6,6 @@ exports.getNotification = async(req, res) => {
     const id = req.userId
     try {
         const listNotification = await Notification.find({targetId : id})
-        console.log('mm')
         return res.status(200).json({
             success: true,
             message: "get notification successful",
