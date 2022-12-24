@@ -64,7 +64,9 @@ const SocketServer = (socket, io) => {
 
         const client = await clients.find(client => client.socketId == socket.id)
         const check = userOnConnects.includes(client)
-
+        if (!client) {
+            return;
+        }
         if (userOnConnects.length != 0 && !check && client.status == status.online) {
             var target = userOnConnects.splice(0, 1)[0];
             io.to(`${client.socketId}`).emit('to-conversation', target.userId)
@@ -97,6 +99,9 @@ const SocketServer = (socket, io) => {
 
     socket.on('stop-connect', async () => {
         const client = await clients.find(user => user.socketId == socket.id)
+        if (!client) {
+            return;
+        }
         if (client.status == status.onConnect) {
             client.status = status.online
             userOnConnects.splice(userOnConnects.indexOf(client), 1);
@@ -107,83 +112,108 @@ const SocketServer = (socket, io) => {
     socket.on('message', async (data) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
-        const target = await clients.find(client => client.userId == sender.targetCallId)
-        if(target && sender){
-            io.to(`${target.socketId}`).to(`${socket.id}`).emit('message', (data))
+        if (!sender) {
+            return;
         }
-        
+        const target = await clients.find(client => client.userId == sender.targetCallId)
+        if (!target) {
+            return;
+        }
+        io.to(`${target.socketId}`).to(`${socket.id}`).emit('message', (data))
     })
 
     socket.on('sendNotification', async (data) => {
         console.log(data.targetId)
         const target = await clients.find(client => client.userId == data.targetId)
-        if(target){
+        if (target) {
             io.to(`${target.socketId}`).emit('sendNotification', (data))
         }
     })
 
     socket.on('acceptInvite', async (targetId) => {
         const user = await clients.find(client => client.socketId == socket.id)
+        if (!user) {
+            return;
+        }
         const target = await clients.find(client => client.userId == targetId)
+        if (target) {
+            if (target.status == status.online) {
+                io.to(`${user.socketId}`).emit('to-conversation', target.userId)
+                io.to(`${target.socketId}`).emit('to-conversation', user.userId)
 
-        if(target){
-            if(target.status == status.online){
-            io.to(`${user.socketId}`).emit('to-conversation', target.userId)
-            io.to(`${target.socketId}`).emit('to-conversation', user.userId)
-    
-            user.status = status.busy
-            target.status = status.busy
-            user.targetCallId = target.userId
-            target.targetCallId = user.userId
-            console.log(user);
-            console.log(target);
+                user.status = status.busy
+                target.status = status.busy
+                user.targetCallId = target.userId
+                target.targetCallId = user.userId
+                console.log(user);
+                console.log(target);
+            }
         }
-        }
+    })
 
-        
+    socket.on('acceptAddFriend', async (id) => {
+        const target = await clients.find(client => client.userId == id)
+        if (target) {
+            io.to(`${target.socketId}`).emit('acceptAddFriend')
+        }
     })
 
     socket.on('voiceCall', async (data) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
+        if (!sender) {
+            return;
+        }
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        if(target){
+        if (target) {
             io.to(`${target.socketId}`).emit('voiceCall', (data))
         }
     })
 
-    socket.on('play',async(data) => {
+    socket.on('play', async (data) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
+        if (!sender) {
+            return;
+        }
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        if(target && sender){
+        if (target && sender) {
             io.to(`${target.socketId}`).emit('play', (data))
         }
     })
 
-    socket.on('pause',async() => {
+    socket.on('pause', async () => {
         //console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
+        if (!sender) {
+            return;
+        }
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        if(target && sender){
+        if (target && sender) {
             io.to(`${target.socketId}`).emit('pause')
         }
     })
 
-    socket.on('chooseSong',async(data) => {
+    socket.on('chooseSong', async (data) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
+        if (!sender) {
+            return;
+        }
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        if(target && sender){
+        if (target && sender) {
             io.to(`${target.socketId}`).emit('chooseSong', (data))
         }
     })
 
-    socket.on('select',async(data) => {
+    socket.on('select', async (data) => {
         console.log(data)
         const sender = await clients.find(client => client.socketId == socket.id)
+        if (!sender) {
+            return;
+        }
         const target = await clients.find(client => client.userId == sender.targetCallId)
-        if(target && sender){
+        if (target && sender) {
             io.to(`${target.socketId}`).emit('select', (data))
         }
     })
@@ -193,12 +223,17 @@ const SocketServer = (socket, io) => {
     socket.on('disconnect-conversation', async () => {
         //const {targetId} = data
         const client = await clients.find(client => client.socketId == socket.id)
-        const targetId = client.targetCallId
-        const target = await clients.find(client => client.userId == targetId)
-        socket.to(`${target.socketId}`).emit('disconnect-conversation')
-        client.targetCallId = target.targetCallId = null
-        target.status = client.status = status.online
-        console.log(clients)
+        if (client) {
+            const targetId = client.targetCallId
+            const target = await clients.find(client => client.userId == targetId)
+            if (target) {
+                socket.to(`${target.socketId}`).emit('disconnect-conversation')
+                client.targetCallId = target.targetCallId = null
+                target.status = client.status = status.online
+                console.log(clients)
+            }
+        }
+
     })
 
     socket.on('logout', async () => {

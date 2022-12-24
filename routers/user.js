@@ -29,6 +29,10 @@ router
     .post(auth, upload.single("image"), userController.addImage)
 
 router
+    .route('/addImageMess')
+    .post(upload.single("image"), userController.addImageMess)
+
+router
     .route('/forgot/checkExists')
     .post(userController.checkExists)
 

@@ -68,7 +68,7 @@ exports.getListFriend = async (req, res) => {
         let listFriendData = [];
         let listRecentConnect = [];
         for (var index = 0; index < user.listFriendId.length; index++) {
-            const friend = await User.findById(user.listFriendId[index]).populate('listImage').populate('settingId','status')
+            const friend = await User.findById(user.listFriendId[index]).populate('listImage').populate('settingId', 'status')
             if (friend) {
                 listFriendData.push({
                     _id: friend._id.toString(),
@@ -85,7 +85,7 @@ exports.getListFriend = async (req, res) => {
 
         }
         for (var index = 0; index < user.listRecentConnect.length; index++) {
-            const friend = await User.findById(user.listRecentConnect[index]).populate('listImage').populate('settingId','status')
+            const friend = await User.findById(user.listRecentConnect[index]).populate('listImage').populate('settingId', 'status')
             if (friend) {
                 listRecentConnect.push({
                     _id: friend._id.toString(),
@@ -365,7 +365,7 @@ exports.addImage = async (req, res) => {
                 success: true,
                 message: "Add image successful",
                 image: image
-            })    
+            })
         }
         return res.status(200).json({
             success: false,
@@ -379,6 +379,23 @@ exports.addImage = async (req, res) => {
     }
 }
 
+exports.addImageMess = async (req, res) => {
+    try {
+        const image = await imageController.upload(req.file.path, 'message')
+
+        res.status(200).json({
+            success: true,
+            message: "Add image mess successful",
+            imageUrl: image.imageUrl
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(201).json({
+            success: false,
+            message: "Add image mess false",
+        })
+    }
+}
 
 exports.changeStatus = async (req, res) => {
     const id = req.userId
@@ -438,7 +455,7 @@ exports.changeSetting = async (req, res) => {
 
 }
 
-exports.addRecentConnect = async (req,res) =>{
+exports.addRecentConnect = async (req, res) => {
     const userId = req.userId
     const { id } = req.body
     try {
